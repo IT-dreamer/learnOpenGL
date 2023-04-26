@@ -2,16 +2,24 @@
 
 string readShaderSource(const char *filePath)
 {
-    string content;
-    std::ifstream fileStream(filePath, std::ios::in);
-    string line(" ");
-    while(!fileStream.eof())
+    try
     {
-        getline(fileStream, line);
-        content.append(line + "\n");
+        string content;
+        std::ifstream fileStream(filePath, std::ios::in);
+        string line(" ");
+        while(!fileStream.eof())
+        {
+            getline(fileStream, line);
+            content.append(line + "\n");
+        }
+        fileStream.close();
+        return content;
     }
-    fileStream.close();
-    return content;
+    catch(std::ifstream::failure &e)
+    {
+        std::cerr << e.what() << '\n';
+        exit(EXIT_FAILURE);
+    }
 }
 
 GLuint creatShaderProgram(const char *vertexFile, const char *fragmentFile)
