@@ -1,5 +1,7 @@
 #include "Utils.h"
 
+using std::string;
+
 string readShaderSource(const char *filePath)
 {
     try
