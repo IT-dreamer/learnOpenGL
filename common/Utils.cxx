@@ -70,7 +70,8 @@ GLuint creatShaderProgram(const char *vertexFile, const char *fragmentFile)
         std::cerr << "linking failed" << std::endl;
         printProgramLog(vfProgram);
     }
-
+    glDeleteShader(vShader);
+    glDeleteShader(fShader);
     return vfProgram;
 }
 
