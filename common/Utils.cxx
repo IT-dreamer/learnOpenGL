@@ -149,3 +149,29 @@ bool checkOpenGLError()
     }
     return foundError;
 }
+
+bool texture2DRGBBind(GLuint texture, const char *texture_path)
+{
+    bool result = false;
+    int textureWidth, textureHeight;
+    auto image = SOIL_load_image(texture_path, &textureWidth, &textureHeight, 0, SOIL_LOAD_RGB);
+
+    if(image)
+    {
+        //bind the target texture to object
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, textureWidth, textureHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        //unbind current texture
+        SOIL_free_image_data(image);
+
+        result = true;
+        return result;
+    }
+    else
+    {
+        std::cerr << "Failed to load texture: " << texture_path;
+        std::cerr << std::endl;
+        return result;
+    }
+}
