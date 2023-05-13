@@ -11,6 +11,8 @@
 glm::mat4 myTransform(int screen_width, int screen_height);
 glm::mat4 myTransform(int screen_width, int screen_height, int i);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
 
 static glm::vec3 cubePositions[] = 
@@ -33,8 +35,13 @@ glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
 
 // other factor
+bool firstMouse = true;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
+float lastX = 400, lastY = 300;
+float yaw   = -90.0f;
+float pitch =  0.0f;
+float fov = 45.0f;
 
 int main(void)
 {
@@ -140,7 +147,10 @@ int main(void)
 
     //configure global opengl state
     glEnable(GL_DEPTH_TEST);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetScrollCallback(window, scroll_callback);
 
     //unbind the vao
     glBindVertexArray(0);
@@ -210,19 +220,59 @@ glm::mat4 myTransform(int screen_width, int screen_height)
 glm::mat4 myTransform(int screen_width, int screen_height, int i)
 {
 
-    float fov = (float)(screen_width / screen_height);
-    //float radius = 10.0f;
-    //float camX = sin(glfwGetTime()) * radius;
-    //float camZ = cos(glfwGetTime()) * radius;
+    //float fov = (float)(screen_width / screen_height);
     glm::mat4 transform(1.0f);
     glm::mat4 mTransform = glm::translate(transform, cubePositions[i]);
     float angle = (float)glfwGetTime() * (i + 1) * 20.0f;
     mTransform = glm::rotate(mTransform, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
     glm::mat4 vTransform = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-    glm::mat4 pTransform = glm::perspective(glm::radians(45.0f), fov, 0.1f, 100.0f);
+    glm::mat4 pTransform = glm::perspective(glm::radians(fov), (float)(_WINDOW_WIDTH_ / _WINDOW_HEIGHT_), 0.1f, 100.0f);
     transform = pTransform * vTransform * mTransform;
     
     return transform;
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+    fov -= (float)yoffset;
+    if (fov < 1.0f)
+        fov = 1.0f;
+    if (fov > 45.0f)
+        fov = 45.0f;
+}
+
+void mouse_callback(GLFWwindow *window, double xpos, double ypos)
+{
+    if(firstMouse)
+    {
+        lastX = xpos;
+        lastY = ypos;
+        firstMouse = false;
+    }
+
+    float xoffset = xpos - lastX;
+    float yoffset = lastY - ypos; 
+    lastX = xpos;
+    lastY = ypos;
+
+    float sensitivity = 0.05;
+    xoffset *= sensitivity;
+    yoffset *= sensitivity;
+
+    yaw   += xoffset;
+    pitch += yoffset;
+
+    if(pitch > 89.0f)
+        pitch = 89.0f;
+    if(pitch < -89.0f)
+        pitch = -89.0f;
+
+    glm::vec3 front;
+    front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+    front.y = sin(glm::radians(pitch));
+    front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+    cameraFront = glm::normalize(front);
+    //cameraFront = front;
 }
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
