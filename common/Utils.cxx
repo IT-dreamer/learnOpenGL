@@ -175,3 +175,81 @@ bool texture2DRGBBind(GLuint texture, const char *texture_path)
         return result;
     }
 }
+
+bool keyboardCameraMove(GLFWwindow *window, AFei::Camera &cam, float speed_factor)
+{
+    if(cam.is_keyboard_move)
+    {
+        static float lastFrame = 0.0f; // last frame time    
+        static float deltaTime = 0.0f; // the time difference between current time and last frame time
+        float currentTime = glfwGetTime();
+
+        deltaTime = currentTime - lastFrame;
+        lastFrame = currentTime;
+
+        float camera_speed = deltaTime * speed_factor;
+
+        auto cameraPosition = cam.getPosition();
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+            cameraPosition += camera_speed * cam.getDirection();
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+            cameraPosition -= camera_speed * cam.getDirection();
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+            cameraPosition -= glm::normalize(glm::cross(cam.getDirection(), cam.getUp())) * camera_speed;
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+            cameraPosition += glm::normalize(glm::cross(cam.getDirection(), cam.getUp())) * camera_speed;
+        
+        auto temp = glm::normalize(glm::cross(cam.getDirection(), cam.getUp()));
+        cam.setPosition(cameraPosition);
+        
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+bool mouseCameraMove(GLFWwindow *window, AFei::Camera &cam, AFei::Cursor &cur)
+{
+    if(cam.is_mouse_move)
+    {
+        static bool firstMouse = true;
+        static float lastX = 400;
+        static float lastY = 300;
+        static float yaw   = -90.0f;
+        static float pitch =  0.0f;
+
+        if(firstMouse)
+        {
+            lastX = cur.getX();
+            lastY = cur.getY();
+            firstMouse = false;
+        }
+
+        float xOffSet = cur.getX() - lastX;
+        float yOffSet = lastY - cur.getY();
+        lastX = cur.getX();
+        lastY = cur.getY();
+
+        xOffSet *= cur.cursorSpeed;
+        yOffSet *= cur.cursorSpeed;
+        yaw += xOffSet;
+        pitch += yOffSet;
+        if(pitch > 89.0f)   pitch = 89.0f;
+        if(pitch < -89.0f)  pitch = -89.0f;
+
+        glm::vec3 front;
+        front.x = cos(glm::radians(yaw) * cos(glm::radians(pitch)));
+        front.y = sin(glm::radians(pitch));
+        front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+        front = glm::normalize(front);
+        cam.setDirection(front);
+
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
